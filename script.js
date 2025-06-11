@@ -18,34 +18,36 @@ const gameBoard = (function(){
 })();
 */
 
+//create player function with name
 function createPlayer (name){
     let score = 0;
     let gameswon = 0;
+    let playing;
 
     const getScore = () => score;
     const getGames = () => gameswon;
     const getName = () => name;
+    const getPlayStatus = () => playing;
 
     const addToScore = () => score++;
     const addToGames = () => gameswon++;
 
-    return {getName, getScore, getGames, addToScore, addToGames}
+    return {getName, getScore, getGames, addToScore, addToGames, getPlayStatus}
 }
 
-const player1 = createPlayer("Nour");
-const player2 = createPlayer("Agata");
+//create gameboard with player1 & player2
+function createGameBoard (player1, player2) {
 
-function createGameBoard () {
     const board = [
-        {id: 1, status: "not"},
-        {id: 2, status: "not"},
-        {id: 3, status: "not"},
-        {id: 4, status: "not"},
-        {id: 5, status: "not"},
-        {id: 6, status: "not"},
-        {id: 7, status: "not"},
-        {id: 8, status: "not"},
-        {id: 9, status: "not"}
+        {id: 1, player: ""},
+        {id: 2, player: ""},
+        {id: 3, player: ""},
+        {id: 4, player: ""},
+        {id: 5, player: ""},
+        {id: 6, player: ""},
+        {id: 7, player: ""},
+        {id: 8, player: ""},
+        {id: 9, player: ""}
     ] 
 
     const getBoard = () => board;
@@ -53,7 +55,7 @@ function createGameBoard () {
     const updateBoard = (move) => {
         board.forEach(button => {
             if (button.id === move.id){
-                button.status = "occupied"
+                button.player = move.player
             }
         })
     }
@@ -61,13 +63,36 @@ function createGameBoard () {
     return {getBoard, updateBoard}
 }
 
-const board = createGameBoard();
-const check = board.getBoard()[0];
-console.log(check);
+/*
+function currentPlayer (player1, player2){
+    const currentP = player1.getName();
 
-board.updateBoard({
-    id: 1
-})
+    return function updateP (){
+        if (currentP === player1.getName()){
+            currentP = player2.getName();
+        } else {
+            currentP = player1.getName();
+        }
 
-const check2 = board.getBoard()[0];
-console.log(check2);
+        return currentP
+    }
+}*/
+
+
+const play = ( function (){
+
+    const player1 = createPlayer("Nour");
+    const player2 = createPlayer("Agata");
+    const board = createGameBoard(player1, player2)
+
+    const updatePlayer = currentPlayer();
+    
+    
+})();
+
+const moveHandler = (function (player, move, board) {
+    const player = player;
+    const move = move;
+    let board = board
+
+})();
