@@ -7,7 +7,26 @@
     <title>Document</title>
 </head>
 <body>
+    <div class="start-game-div">
+        <img src="logo.png" alt="" class="logo-img">
+        <form class="player-form">
+            <div class="input-container">
+                <label for="first-player-field">Player 1 Name:</label>
+                <input type="text" name="" id="first-player-field" required>
+            </div>
+            <div class="input-container">
+                <label for="second-player-field">Player 2 Name:</label>
+                <input type="text" name="" id="second-player-field" required>
+            </div>
+            <input class="start-button" type="submit" value="Start Game">
+        </form>
+    </div>
 
+    <div class="hide-board">
+        <h2 class="current-player"></h2>
+        <div class="board-div">
+        </div>
+    </div>
 </body>
 <script src="script.js"></script>
 </html>

@@ -1,43 +1,28 @@
-/*const initBoard = (function () {
-    const board = document.createElement("div");
-    board.classList.add("board-div")
-    
-    
-    for (let i = 0; i < 9; i++){
-        const boardButton = document.createElement("div");
-        boardButton.classList.add("board-button");
-        board.appendChild(boardButton);
-    }
-
-    return board;
-
-})();
-
-const gameBoard = (function(){
-
-})();
-*/
-
 //create player function with name
 function createPlayer (name){
     let score = 0;
     let gameswon = 0;
     let playing;
+    let shape;
 
     const getScore = () => score;
     const getGames = () => gameswon;
     const getName = () => name;
     const getPlayStatus = () => playing;
+    const getShape = () => shape;
 
     const addToScore = () => score++;
     const addToGames = () => gameswon++;
+    const setPlayStatus = (status) => playing = status;
+    const setShape = (shapeNew) => shape = shapeNew
 
-    return {getName, getScore, getGames, addToScore, addToGames, getPlayStatus}
+    return {getName, getScore, getGames, addToScore, addToGames, getPlayStatus, setPlayStatus, getShape, setShape}
 }
 
 //create gameboard with player1 & player2
-function createGameBoard (player1, player2) {
-
+function createGameBoard () {
+    let victoryFlag = false;
+    
     const board = [
         {id: 1, player: ""},
         {id: 2, player: ""},
@@ -50,49 +35,214 @@ function createGameBoard (player1, player2) {
         {id: 9, player: ""}
     ] 
 
+    const pattern = [
+        [1,2,3],
+        [4,5,6],
+        [7,8,9],
+        [1,4,7],
+        [2,5,8],
+        [3,6,9],
+        [1,5,9],
+        [3,5,7]
+    ]
+
     const getBoard = () => board;
+    const getPattern = () => pattern;
+    const getFlag = () => victoryFlag;
 
     const updateBoard = (move) => {
         board.forEach(button => {
             if (button.id === move.id){
-                button.player = move.player
+                if (button.player === ""){
+                    button.player = move.player.getName();
+                }else if (button.player != ""){
+                    console.log("already occupied");
+                }
+                
             }
         })
     }
 
-    return {getBoard, updateBoard}
+    const setVictory = () => victoryFlag = true;
+
+    return {getBoard, updateBoard, getPattern, setVictory, getFlag}
 }
 
-/*
-function currentPlayer (player1, player2){
-    const currentP = player1.getName();
+function moveHandler (player, board, moveInput){ 
+    let move = {id: moveInput, player: player}
+    board.updateBoard(move)
+    let playerMoveObjects = board.getBoard().filter((position) => position.player === player.getName())
+    let playerMoves = playerMoveObjects.map((moveObj) => moveObj.id);
+    
+    if (moveValidator(playerMoves, board)){
+        return true
+    }
 
-    return function updateP (){
-        if (currentP === player1.getName()){
-            currentP = player2.getName();
-        } else {
-            currentP = player1.getName();
+};
+
+function moveValidator (playerMoves, board) {
+            board.getPattern().forEach((pattern) =>{
+            let check = 0;
+            let i = 0;
+            
+            while (i < 3){
+                if(playerMoves.includes(pattern[i])){
+                    check++
+                }
+                i++;
+            }
+
+            if (check === 3){
+                board.setVictory();
+            }
+        });
+    return board.getFlag();
+    };
+
+
+//module for handling the game
+const gameHandler = ( function (){
+
+    
+    
+    const runGame = (player1, player2) => {
+        let board;
+        console.log(board)
+        document.querySelector(".hide-board").style.display = "block";
+        document.querySelector(".start-game-div").style.display = "none";
+        const currentPlayerText = document.querySelector(".current-player");
+        boardGraphics.UI();
+        let boardSquares = document.querySelectorAll(".board-button")
+        board = createGameBoard();
+        let victory = false;
+
+        function userMove (event){
+            let boardSquare = event.target;
+            let currentPlayer = decidePlayer.decide(player1, player2);
+            boardSquare.textContent = currentPlayer.getShape();
+            boardSquare.classList.add(currentPlayer.getShape());
+            let UserInput = Number(boardSquare.id);
+            currentPlayerText.textContent = "current player is " + currentPlayer.getName() + ".";
+            
+            if(moveHandler(currentPlayer, board, UserInput) === true){
+                console.log("hello")
+                boardSquare.textContent = currentPlayer.getShape();
+                boardSquare.classList.add(currentPlayer.getShape());
+                console.log(currentPlayer.getName() + " has won!")
+                victory = true;
+            }
+
+            if (victory === true){
+                currentPlayerText.textContent = "The winner is: " + currentPlayer.getName() + ".";
+                boardSquares.forEach((b) => {
+                    b.removeEventListener("click", userMove)
+                    b.style.cursor = "not-allowed";
+                })
+            }
         }
 
-        return currentP
+        boardSquares.forEach((boardSquare) => {
+            boardSquare.addEventListener("click", userMove)
+        })
+
+
     }
-}*/
+
+    return {runGame}
+
+})();
+
+const boardGraphics = (function(){
+
+    function UI(){
+        let boardDivParent = document.querySelector(".hide-board");
+        let boardDiv = document.querySelector(".board-div");
+        boardDivParent.removeChild(boardDiv);
+
+        boardDiv = document.createElement("div");
+        boardDiv.classList.add("board-div");
+
+        for (let i = 1; i<10 ; i++){
+            let boardDivButton = document.createElement("div");
+            boardDivButton.classList.add("board-button");
+            boardDivButton.setAttribute("id", i.toString())
+            boardDiv.appendChild(boardDivButton);
+        }
+
+        boardDivParent.appendChild(boardDiv);
+
+        return boardDiv
+
+    }
+
+    return {UI}
+})();
 
 
-const play = ( function (){
 
-    const player1 = createPlayer("Nour");
-    const player2 = createPlayer("Agata");
-    const board = createGameBoard(player1, player2)
 
-    const updatePlayer = currentPlayer();
+const decidePlayer = (function(){
+    let currentPlayer = "";
+        function decide(player1, player2) {
+            //player 1 switch to 2
+            if (player1.getPlayStatus() === true){
+                currentPlayer = player1;
+                player1.setPlayStatus(false);
+                player2.setPlayStatus(true);
+            }
+
+            //player 2 switch to 1
+            else if (player2.getPlayStatus() === true){
+                currentPlayer = player2;
+                player2.setPlayStatus(false);
+                player1.setPlayStatus(true);
+            }
+            return currentPlayer
+        }
+     
+
+
+
+    return {decide}
+})();
+
+
+
+//function that handles creating player objects and initiating game
+const initGame = (function (){
     
+    const startBtn = document.querySelector(".start-button");
+    
+    startBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        console.log("again")
+        
+        let player1;
+        let player2;
+        console.log(player1);
+
+        
+        const player1Name = document.querySelector("#first-player-field").value;
+        const player2Name = document.querySelector("#second-player-field").value;
+        if (player1Name != "" && player2Name != ""){
+            player1 = createPlayer(player1Name)
+            player1.setPlayStatus(true);
+            player1.setShape("O");
+
+            player2 = createPlayer(player2Name);
+            player2.setPlayStatus(false);
+            player2.setShape("X");
+
+            gameHandler.runGame(player1, player2);
+        }
+    })
     
 })();
 
-const moveHandler = (function (player, move, board) {
-    const player = player;
-    const move = move;
-    let board = board
 
-})();
+    window.addEventListener('load', function() {
+    document.querySelector('.start-game-div').classList.add('visible');
+  });
+
+
+
