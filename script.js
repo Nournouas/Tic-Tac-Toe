@@ -22,7 +22,7 @@ function createPlayer (name){
 //create gameboard with player1 & player2
 function createGameBoard () {
     let victoryFlag = false;
-    
+    let fullyOccupied = 0;
     const board = [
         {id: 1, player: ""},
         {id: 2, player: ""},
@@ -49,12 +49,14 @@ function createGameBoard () {
     const getBoard = () => board;
     const getPattern = () => pattern;
     const getFlag = () => victoryFlag;
+    const getFully = () => fullyOccupied;
 
     const updateBoard = (move) => {
         board.forEach(button => {
             if (button.id === move.id){
                 if (button.player === ""){
                     button.player = move.player.getName();
+                    fullyOccupied++;
                 }else if (button.player != ""){
                     console.log("already occupied");
                 }
@@ -65,7 +67,7 @@ function createGameBoard () {
 
     const setVictory = () => victoryFlag = true;
 
-    return {getBoard, updateBoard, getPattern, setVictory, getFlag}
+    return {getBoard, updateBoard, getPattern, setVictory, getFlag, getFully}
 }
 
 function moveHandler (player, board, moveInput){ 
@@ -73,14 +75,18 @@ function moveHandler (player, board, moveInput){
     board.updateBoard(move)
     let playerMoveObjects = board.getBoard().filter((position) => position.player === player.getName())
     let playerMoves = playerMoveObjects.map((moveObj) => moveObj.id);
-    
     if (moveValidator(playerMoves, board)){
-        return true
+        return "win";
     }
+    if (board.getFully() === 9){
+        return "draw";
+    }
+    
 
 };
 
 function moveValidator (playerMoves, board) {
+            
             board.getPattern().forEach((pattern) =>{
             let check = 0;
             let i = 0;
@@ -114,7 +120,6 @@ const gameHandler = ( function (){
         boardGraphics.UI();
         let boardSquares = document.querySelectorAll(".board-button")
         board = createGameBoard();
-        let victory = false;
 
         function userMove (event){
             let boardSquare = event.target;
@@ -124,20 +129,33 @@ const gameHandler = ( function (){
             let UserInput = Number(boardSquare.id);
             currentPlayerText.textContent = "current player is " + currentPlayer.getName() + ".";
             
-            if(moveHandler(currentPlayer, board, UserInput) === true){
-                console.log("hello")
+            if(moveHandler(currentPlayer, board, UserInput) === "win"){
                 boardSquare.textContent = currentPlayer.getShape();
                 boardSquare.classList.add(currentPlayer.getShape());
-                console.log(currentPlayer.getName() + " has won!")
-                victory = true;
-            }
-
-            if (victory === true){
                 currentPlayerText.textContent = "The winner is: " + currentPlayer.getName() + ".";
                 boardSquares.forEach((b) => {
                     b.removeEventListener("click", userMove)
                     b.style.cursor = "not-allowed";
+                });
+                const resetb = document.createElement("button");
+                resetb.textContent = "reset";
+                document.querySelector(".hide-board").appendChild(resetb);
+                resetb.addEventListener("click", handleReset.reset);
+
+            }
+            
+            else if (moveHandler(currentPlayer, board, UserInput) === "draw"){
+                boardSquare.textContent = currentPlayer.getShape();
+                boardSquare.classList.add(currentPlayer.getShape());
+                currentPlayerText.textContent = "Its a draw!";
+                boardSquares.forEach((b) => {
+                    b.removeEventListener("click", userMove)
+                    b.style.cursor = "not-allowed";
                 })
+                const resetb = document.createElement("button");
+                resetb.textContent = "reset";
+                document.querySelector(".hide-board").appendChild(resetb);
+                resetb.addEventListener("click", handleReset.reset);
             }
         }
 
@@ -206,36 +224,67 @@ const decidePlayer = (function(){
     return {decide}
 })();
 
+const handleReset = (function (){
+
+    function reset () {
+        let boardDiv = document.querySelector(".board-div");
+        boardDiv.remove();
+        console.log(boardDiv);
+
+        document.querySelector("#first-player-field").value = "";
+        document.querySelector("#second-player-field").value = "";
+
+        let form = document.querySelector(".player-form");
+        form.removeChild(document.querySelector(".start-button"));
+        document.querySelector(".current-player").textContent = "";
+        const startBtn = document.createElement("input");
+        startBtn.classList.add("start-button");
+        startBtn.setAttribute("type", "submit");
+        startBtn.setAttribute("value", "Start Game");
+        document.querySelector(".player-form").appendChild(startBtn)
+
+        document.querySelector(".hide-board").style.display = "none";
+        document.querySelector(".start-game-div").style.display = "block";
+    }
+    
+    return {reset};
+
+})();
+
 
 
 //function that handles creating player objects and initiating game
 const initGame = (function (){
-    
     const startBtn = document.querySelector(".start-button");
+    function init(e) {
+        console.log("starting")
+            e.preventDefault();
+            console.log("again")
+            
+            let player1;
+            let player2;
+            console.log(player1);
+
+            
+            const player1Name = document.querySelector("#first-player-field").value;
+            const player2Name = document.querySelector("#second-player-field").value;
+            if (player1Name != "" && player2Name != ""){
+                player1 = createPlayer(player1Name)
+                player1.setPlayStatus(true);
+                player1.setShape("O");
+
+                player2 = createPlayer(player2Name);
+                player2.setPlayStatus(false);
+                player2.setShape("X");
+
+                gameHandler.runGame(player1, player2);
+            }
+
+    }
+
+     startBtn.addEventListener("click", init)
     
-    startBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        console.log("again")
-        
-        let player1;
-        let player2;
-        console.log(player1);
-
-        
-        const player1Name = document.querySelector("#first-player-field").value;
-        const player2Name = document.querySelector("#second-player-field").value;
-        if (player1Name != "" && player2Name != ""){
-            player1 = createPlayer(player1Name)
-            player1.setPlayStatus(true);
-            player1.setShape("O");
-
-            player2 = createPlayer(player2Name);
-            player2.setPlayStatus(false);
-            player2.setShape("X");
-
-            gameHandler.runGame(player1, player2);
-        }
-    })
+    return {init}
     
 })();
 
